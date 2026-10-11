@@ -1,0 +1,109 @@
+/* Breakpoints: tablet (≤1024), drawer panel (≤900), phone (≤760), compact toolbar (≤600). */
+@media (max-width: 1024px) {
+  :root { --panel-w: 330px; }
+  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr); }
+}
+
+/* The side panel floats over the stage instead of narrowing it. */
+@media (max-width: 900px) {
+  .side-panel {
+    position: fixed; z-index: 40;
+    top: calc(env(safe-area-inset-top) + 72px); right: var(--gutter);
+    bottom: calc(var(--toolbar-h) + env(safe-area-inset-bottom) + 30px);
+    width: min(var(--panel-w), calc(100vw - 2 * var(--gutter)));
+    box-shadow: var(--glass-shadow-lg), inset 0 1px 1px var(--glass-highlight);
+  }
+  .lobby-body { grid-template-columns: minmax(0, 1fr); max-width: 640px; }
+}
+
+@media (max-width: 760px) {
+  :root { --toolbar-h: 62px; }
+  .hero { grid-template-columns: minmax(0, 1fr); padding-top: 36px; gap: 28px; }
+  .hero-visual { min-height: 0; }
+  .mock-window { transform: none; width: 100%; }
+  .mock-bubble { display: none; }
+  .hero-actions .btn { flex: 1 1 200px; }
+  .nav { padding-left: 14px; }
+
+  .meeting-header { gap: 6px; padding-top: calc(env(safe-area-inset-top) + 8px); padding-bottom: 8px; }
+  .header-group { min-height: 44px; padding-left: 10px; gap: 4px; }
+  .header-status { padding-left: 12px; }
+  .header-group > .brand-mark, .header-group > .divider:first-of-type { display: none; }
+  #invite span { display: none; }
+  #invite { width: 36px; padding: 0; }
+  .connection #connection-label { font-size: 12.5px; }
+  .meeting-main { padding-left: 10px; padding-right: 10px; gap: 0; }
+  .tile { border-radius: 16px; }
+
+  /* Strips move under the main content on phones. */
+  .stage[data-layout="presentation"], .stage[data-layout="board"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 8px;
+  }
+  .stage[data-layout="presentation"] .people, .stage[data-layout="board"] .people {
+    flex-direction: row; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px;
+  }
+  .stage[data-layout="presentation"] .people .tile, .stage[data-layout="board"] .people .tile {
+    width: 112px; aspect-ratio: 4 / 3;
+  }
+  .stage[data-layout="board"] .tile-label { display: none; }
+
+  /* Chat and participants open as a bottom sheet. */
+  .side-panel {
+    top: auto; left: 0; right: 0; bottom: 0;
+    width: 100%; height: min(78dvh, 640px);
+    border-radius: 26px 26px 0 0; border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: sheet-in var(--transition-normal) var(--ease-out);
+    z-index: 45;
+  }
+  .panel-head::before {
+    content: ""; position: absolute; left: 50%; top: 6px; width: 38px; height: 4px;
+    border-radius: 2px; background: var(--line-strong); transform: translateX(-50%);
+  }
+  .panel-head { position: relative; padding-top: 18px; }
+  .board-toolbar { align-self: stretch; border-radius: 18px; gap: 2px; }
+  .tool-btn { width: 36px; height: 36px; }
+  .board-toolbar .tool-divider { display: none; }
+  .swatch { width: 24px; height: 24px; }
+  .size-control input[type="range"] { width: 72px; }
+  .board-surface { border-radius: 14px; }
+  .waiting { bottom: 10px; padding: 14px 16px; }
+}
+@keyframes sheet-in { from { transform: translateY(40px); opacity: 0; } }
+
+@media (max-width: 600px) {
+  .hide-compact { display: none !important; }
+  .show-compact { display: flex; }
+  .toolbar { gap: 4px; padding: 6px; bottom: calc(env(safe-area-inset-bottom) + 10px); }
+  .toolbar-group { gap: 4px; }
+  .toolbar-divider { margin: 0 2px; height: 24px; }
+  .ctl { width: 46px; height: 46px; }
+  .ctl-leave { width: 46px; padding: 0; }
+  .ctl-leave .ctl-text { display: none; }
+  .menu { right: -60px; width: min(290px, calc(100vw - 24px)); }
+  .lobby-panel, .preview { border-radius: 22px; }
+  .preview { aspect-ratio: 4 / 3; }
+  .room-chip code { max-width: 34vw; }
+}
+
+@media (max-width: 380px) {
+  .ctl { width: 42px; height: 42px; }
+  .ctl .icon { width: 20px; height: 20px; }
+  .ctl-leave { width: 42px; }
+  .timer { display: none; }
+  .header-group > .divider { display: none; }
+}
+
+/* Landscape phones: reclaim vertical space. */
+@media (max-height: 520px) and (orientation: landscape) {
+  :root { --toolbar-h: 56px; }
+  .meeting-header { padding-top: 6px; padding-bottom: 6px; }
+  .header-group { min-height: 40px; }
+  .ctl { width: 42px; height: 42px; }
+  .toolbar { bottom: 8px; padding: 5px; }
+  .meeting-main { padding-bottom: calc(var(--toolbar-h) + 18px); }
+  .side-panel { height: auto; top: 8px; left: auto; right: 8px; width: min(360px, 60vw); border-radius: 22px; bottom: 8px; border-bottom: 1px solid var(--glass-border); }
+  .preview { aspect-ratio: 16 / 9; }
+}

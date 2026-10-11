@@ -1,0 +1,76 @@
+/* Collaborative whiteboard. The paper is opaque; only its toolbar is glass. */
+.board { min-width: 0; min-height: 0; flex-direction: column; gap: 10px; }
+.board-toolbar {
+  align-self: center; max-width: 100%;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px;
+  padding: 6px; border-radius: 26px;
+}
+.tool-group { display: flex; align-items: center; gap: 2px; }
+.tool-divider { width: 1px; height: 24px; margin: 0 4px; flex: none; background: var(--line-strong); }
+.tool-btn {
+  display: grid; place-items: center; flex: none;
+  width: 38px; height: 38px; padding: 0; border: 0; border-radius: 50%;
+  background: transparent; color: var(--text-primary);
+  transition: background-color var(--transition-fast) ease, color var(--transition-fast) ease;
+}
+.tool-btn .icon { width: 19px; height: 19px; }
+.tool-btn:hover:not(:disabled) { background: var(--control-bg-hover); }
+.tool-btn[aria-pressed="true"] { background: var(--control-active-bg); color: var(--control-active-fg); }
+.tool-btn:disabled { opacity: 0.35; }
+.tool-danger:hover:not(:disabled) { color: var(--danger); background: var(--danger-soft); }
+.swatch {
+  width: 28px; height: 28px; flex: none; padding: 0; margin: 0 1px;
+  border: 2px solid transparent; border-radius: 50%;
+  background: var(--swatch); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+  transition: transform var(--transition-fast) var(--ease-out);
+}
+.swatch:hover { transform: scale(1.08); }
+.swatch[aria-pressed="true"] { border-color: var(--glass-surface-solid); box-shadow: 0 0 0 2px var(--text-primary); }
+.color-custom {
+  position: relative; display: grid; place-items: center; flex: none;
+  width: 30px; height: 30px; border-radius: 50%; overflow: hidden; cursor: pointer;
+  background: conic-gradient(#243341, #8DAFC0, #C6DBE9, #E8A87C, #D96C6C, #6CA389, #243341);
+}
+.color-custom input { position: absolute; inset: -8px; width: 46px; height: 46px; opacity: 0; cursor: pointer; }
+.color-custom:focus-within { outline: 2.5px solid var(--focus-ring); outline-offset: 2px; }
+.size-control { display: flex; align-items: center; gap: 8px; padding: 0 6px; flex: none; }
+.size-dot { width: 22px; height: 22px; display: grid; place-items: center; }
+.size-dot::before { content: ""; width: var(--dot, 6px); height: var(--dot, 6px); border-radius: 50%; background: var(--board-color, var(--text-primary)); }
+.size-control input[type="range"] { width: 92px; accent-color: var(--text-primary); }
+
+.board-area { position: relative; flex: 1; min-height: 0; display: grid; place-items: center; }
+.board-surface {
+  position: relative; width: var(--board-w, 100%); height: var(--board-h, 100%);
+  border-radius: 18px; overflow: hidden;
+  background-color: var(--board-paper);
+  background-image: radial-gradient(var(--board-dots) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  box-shadow: 0 14px 40px rgba(20, 40, 60, 0.14), inset 0 0 0 1px rgba(36, 51, 65, 0.08);
+}
+.board-surface canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.board-surface[data-tool="text"] canvas { cursor: text; }
+.board-surface[data-tool="eraser"] canvas { cursor: cell; }
+.board-empty {
+  position: absolute; inset: auto 0 18px; text-align: center; pointer-events: none;
+  font-size: 13.5px; color: #647B8D;
+}
+.board-cursors { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.cursor {
+  position: absolute; left: 0; top: 0;
+  transition: transform 90ms linear, opacity var(--transition-normal) ease;
+  will-change: transform;
+}
+.cursor svg { width: 18px; height: 18px; fill: var(--cursor); stroke: #FFFFFF; stroke-width: 1.5; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25)); }
+.cursor span {
+  position: absolute; left: 14px; top: 16px; white-space: nowrap;
+  padding: 2px 8px; border-radius: var(--radius-pill);
+  background: var(--cursor); color: #FFFFFF; font-size: 11.5px; font-weight: 600;
+}
+.cursor.is-idle { opacity: 0; }
+.board-text-input {
+  position: absolute; z-index: 3; min-width: 120px; max-width: 70%;
+  margin: 0; padding: 2px 4px; min-height: 0 !important;
+  border: 1.5px dashed #8DAFC0 !important; border-radius: 6px !important;
+  background: rgba(255, 255, 255, 0.92) !important; color: #243341 !important;
+  font-family: var(--font-sans); line-height: 1.2; box-shadow: none !important;
+}

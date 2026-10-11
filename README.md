@@ -1,6 +1,8 @@
-# Together — Spring Boot group calls
+# Together 2.0 — Meet. Talk. Create.
 
-A single Spring Boot application serving plain HTML, CSS and JavaScript. No Node frontend build, database, account registration, or separate signaling service is required.
+A single Spring Boot application serving a plain HTML/CSS/ES-module frontend: group video calls with screen sharing, live chat and a collaborative whiteboard, in the Liquid Glass design (Frost Light and Midnight Glass themes). No Node frontend build, database, account registration, or separate signaling service is required.
+
+Design, protocol, retention and scaling notes: [docs/TOGETHER-2.0.md](docs/TOGETHER-2.0.md).
 
 ## Run on your PC
 
@@ -10,11 +12,14 @@ Install JDK 21, then run from this directory:
 ./gradlew bootRun --args='--server.port=8081'
 ```
 
-Open **http://localhost:8081** in a desktop browser. Enter your name, choose whether to start with microphone/camera, and allow access to the selected devices. If a device cannot start, you still join with the available devices. Use **Retry mic** or **Retry camera** after fixing its permissions or availability. Click **Copy invite link**, then open that exact link in another tab or browser and join with another name. Use headphones, or mute all but one tab's microphone, to avoid feedback on one PC. If another application is not using port 8080, plain `./gradlew bootRun` uses 8080 instead.
+Open **http://localhost:8081** in a desktop browser and choose **Start a meeting**. Each new meeting gets its own unguessable code (for example `kmrt-vhqa-bzne`). In the lobby, check your camera and microphone, choose devices and enter your name; you can join with either device off. Copy the invite link (link icon in the lobby, or **Invite** in the meeting) and open it in another tab or browser. Use headphones, or mute all but one tab's microphone, to avoid feedback on one PC. If port 8080 is free, plain `./gradlew bootRun` uses 8080 instead.
 
-Click **Share screen** and choose a window, tab, or display in the browser picker. Camera video stays visible. Other participants can share simultaneously; each screen has a separate tile. This version shares screen video only, not system audio. Screen capture support varies on mobile; desktop Chrome/Edge/Firefox is the intended starting point.
+In the meeting:
 
-**Leave call** stops camera, microphone and screen capture. A closed or refreshed tab is removed from the room. If the signaling server disconnects, the app releases media and offers the join form again.
+- **Share screen** (desktop browsers): camera stays live; several people can share at once and screens take the main stage.
+- **Chat**: Enter sends, Shift+Enter adds a line. Unread messages show a badge. New participants receive the last 100 messages.
+- **Whiteboard**: pen, eraser, line, rectangle, circle, text, colors, brush size, undo/redo (your own changes), clear (confirmed, for everyone) and PNG export. Video and audio continue while drawing.
+- **Leave** stops camera, microphone and screen capture. A refreshed tab rejoins as the same participant; a dropped connection reconnects automatically for up to 90 seconds.
 
 ## Package and deploy one application
 
@@ -43,10 +48,11 @@ TURN is separate media relay infrastructure, required for reliable connectivity 
 
 ## Scope and architecture
 
-- Empty room fields join the shared `DEFAULT_NAME` room. Custom room codes and invitation links are also supported; no accounts, lobby approval, persistent chat or moderation.
+- **Start a meeting** creates a random room; nobody is placed in a shared default room. Existing `?room=CODE` links (including `DEFAULT_NAME`) still work. No accounts, lobby approval, persistent chat or moderation.
+- Chat and whiteboard state is held in memory per room (100 messages; bounded board) and expires 15 minutes after the room empties or when the server restarts.
 - Six participants maximum per room, using a full peer-to-peer mesh. Each browser sends camera, microphone and optional screen to every other peer. This cap is a guardrail, not a performance guarantee; start with 2–3 users and measure your hardware/network.
-- Rooms and membership exist only in memory. Restarting the server ends signaling sessions; multiple app instances need shared routing/state.
-- The server validates room membership before forwarding signals and derives sender IDs from the socket session. WebSockets use Spring's default same-origin policy.
+- Rooms and membership exist only in memory. Restarting the server ends signaling sessions; multiple app instances need shared routing/state (see the scaling section of the 2.0 notes).
+- One WebSocket per participant carries signaling, chat and whiteboard events. The server validates room membership and payloads for every message, assigns participant IDs and authorship itself, rate-limits each participant, and bounds per-session send buffers. WebSockets use Spring's default same-origin policy.
 - One deterministic offerer per browser pair establishes three fixed media slots: audio, camera, screen. Track replacement supports simultaneous camera/screen without conflicting offers. An ICE restart is attempted by the offerer on connection failure.
 - Media flows between browsers (or through configured TURN), not through Spring. For larger group calls, use an SFU architecture described in `webrtc-guide.html`.
 
@@ -54,33 +60,46 @@ TURN is separate media relay infrastructure, required for reliable connectivity 
 
 ```text
 src/main/java/com/saldev/webrtc/
-  config/WebSocketConfig.java          WebSocket registration
-  realtime/RoomHandler.java            Membership and signaling
-  controller/CallConfigController.java Browser ICE configuration
+  config/WebSocketConfig.java            WebSocket registration
+  realtime/RoomHandler.java              Transport, membership, signaling and event routing
+  realtime/Room*.java, Participant.java  In-memory room state, expiry and rate limits
+  service/ChatService.java               Chat validation and bounded history
+  service/WhiteboardService.java         Whiteboard validation and editing rules
+  controller/CallConfigController.java   Browser ICE configuration
 src/main/resources/static/
-  index.html                          Lobby and room UI
-  style.css                           Responsive styling
-  app.js                              Media and call lifecycle
-src/test/java/com/saldev/webrtc/realtime/RoomHandlerTests.java
-scripts/browser-test.mjs               Multi-browser media checks
+  index.html                             Landing, lobby and meeting markup
+  css/                                   Design tokens, glass surfaces and per-screen styles
+  js/core/                               Signaling, media, peer mesh, room codes, theme, chat model
+  js/components/                         Landing, lobby, meeting, video tiles, chat, toasts
+  js/whiteboard/                         Board model, geometry, canvas renderer and tools
+src/test/java/…                          JUnit tests (rooms, chat, whiteboard, services)
+src/test/js/frontend.test.mjs            Node unit tests for DOM-free frontend modules
+scripts/*.mjs                            Multi-browser Playwright suites
 ```
 
 ## Verification
 
 ```bash
 ./gradlew test
-node --check src/main/resources/static/app.js
+node --test src/test/js/*.test.mjs
+node scripts/device-detection-test.mjs
 ```
 
 Optional browser automation uses Node, Playwright and an installed Chrome. These are test tools only, not deployment dependencies:
 
 ```bash
 npm install --prefix /tmp/together-browser-test playwright
-PLAYWRIGHT_MODULE=/tmp/together-browser-test/node_modules/playwright/index.mjs \
-  node scripts/browser-test.mjs
+export PLAYWRIGHT_MODULE=/tmp/together-browser-test/node_modules/playwright/index.mjs
+node scripts/browser-test.mjs          # calls, screens, view switching, reconnect, mobile
+node scripts/collaboration-test.mjs    # chat, whiteboard, themes, keyboard flows
+node scripts/media-fallback-test.mjs   # unavailable/denied devices
+node scripts/screen-capture-test.mjs   # screen-share failure modes
+node scripts/room-invite-test.mjs      # room codes and invitations
+node scripts/heartbeat-test.mjs
+node scripts/device-browser-test.mjs
 ```
 
-Start the app on 8081 before running this script. Override `TEST_URL` and `CHROME_PATH` if needed. The script uses synthetic media to check three-person audio/video, mute/camera state, two simultaneous screen shares, late arrival, screen restart, leave cleanup and mobile layout. Screenshots are written under `/tmp/together-*.png`. A real-device test is still needed to check your webcam, speaker echo, operating-system picker, and external-network TURN connectivity.
+Start the app on 8081 first (override with `TEST_URL`; `CHROME_PATH` selects Chrome). The suites use synthetic media and write screenshots under `/tmp/together-*.png`. A real-device test is still needed for webcams, speaker echo, operating-system pickers and TURN connectivity — see the manual checklist in [docs/TOGETHER-2.0.md](docs/TOGETHER-2.0.md).
 
 ## Microphone could not start
 
@@ -93,7 +112,7 @@ PLAYWRIGHT_MODULE=/tmp/together-browser-test/node_modules/playwright/index.mjs \
   node scripts/media-fallback-test.mjs
 ```
 
-It simulates unavailable/denied devices and verifies joining, live microphone/camera recovery, and cleanup during a pending device request.
+It simulates unavailable/denied devices and verifies joining, live microphone/camera recovery, and cleanup during a pending device request. Turning the camera off in a meeting stops the camera (its light turns off); turning it on requests it again.
 
 ## Screen sharing says “Not supported”
 
@@ -105,9 +124,7 @@ Run `scripts/screen-capture-test.mjs` with the same `PLAYWRIGHT_MODULE` environm
 
 ## Joining the same room
 
-Leave **Room code or invitation link** empty to join `DEFAULT_NAME`. Empty and whitespace-only values use this same shared room, so two people opening the home page on the same server meet automatically. Enter a custom room code or paste an invitation to join another room.
-
-Both participants must use the same server and port. Ports 8080 and 8081 are separate app instances with separate membership. The call displays its room code and server address for comparison.
+Use **Start a meeting** and share the invitation, or choose **Join a meeting** and enter the code or paste the full link. Both participants must use the same server and port: ports 8080 and 8081 are separate app instances with separate rooms, and links for another server are refused with an explanation.
 
 ## Deploy to Render
 
@@ -137,7 +154,7 @@ export TELEGRAM_TIME_ZONE='Asia/Phnom_Penh'
 ./gradlew bootRun --args='--server.port=8081'
 ```
 
-Open `http://localhost:8081`, enter a name, join a room and leave. Confirm both Telegram alerts contain device details. This also sends the existing service-up/stopping alerts. Enter your valid replacement token at the hidden prompt; it is not placed into command history. After stopping with Ctrl+C, run `unset TELEGRAM_BOT_TOKEN` to remove it from that shell's environment.
+Open `http://localhost:8081`, start a meeting, join and leave. Confirm both Telegram alerts contain device details. This also sends the existing service-up/stopping alerts. Enter your valid replacement token at the hidden prompt; it is not placed into command history. After stopping with Ctrl+C, run `unset TELEGRAM_BOT_TOKEN` to remove it from that shell's environment.
 
 Automated checks (no real Telegram messages):
 

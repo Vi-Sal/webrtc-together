@@ -70,3 +70,9 @@ The 0.5.0 image logs `http://localhost:10000/healthz` on Render because it uses 
 ## Corrected Render URL release 0.5.1 (2026-10-10)
 
 Published `docker.io/visal009/together-webrtc:0.5.1`, digest `sha256:716679639336a62243f024ee4c328808d01b827d7ce8c380f31eebbbf1a50007`. Tests and container smoke checks passed. With Render's automatically supplied `RENDER_EXTERNAL_URL` simulated, the image logged `https://together-webrtc.onrender.com/healthz`; no manual dashboard variable is needed. Outside Render it falls back to the actual local port. Registry manifest verified. Render must be redeployed to use the corrected image.
+
+## Together 2.0 — Liquid Glass, live chat and whiteboard (2026-10-11)
+
+Redesigned landing page, pre-join lobby and meeting room (Frost Light / Midnight Glass); modular ES-module frontend; room-scoped live chat; collaborative whiteboard; automatic signaling reconnect with resumable identity; random meeting codes instead of the shared default room; per-participant rate limits, payload validation and bounded send buffers. Details: [TOGETHER-2.0.md](TOGETHER-2.0.md).
+
+Validation: `./gradlew clean build` passed (50 Java tests); 12 Node frontend unit tests passed; Playwright suites `browser-test`, `collaboration-test`, `media-fallback-test`, `screen-capture-test`, `room-invite-test`, `heartbeat-test` and `device-browser-test` passed against the local app in headless Chrome with synthetic media; `deployment-smoke-test.py` passed against the packaged jar on port 10000. Published `docker.io/visal009/together-webrtc:2.0.0` (linux/amd64), digest `sha256:458c9c08a1f948bd7e5a891c4e4847c6100203f86016d98dc04ac415cd123bd6`; the Docker build ran the Java tests, and the container passed the smoke test under a 512 MB limit as user 10001. Registry manifest verified. Render has not been redeployed; real phones, Safari/Firefox and TURN connectivity still need the manual checklist.

@@ -1,6 +1,6 @@
 # Deploy Together to Render
 
-Published testing image: `docker.io/visal009/together-webrtc:0.5.1` (2026-10-09). Select this reference under **Existing Image** in Render. The image passed container smoke checks; a live Render deployment and physical-phone call still need verification.
+Published testing image: `docker.io/visal009/together-webrtc:2.0.0` (2026-10-11, Together 2.0 with chat and whiteboard). Select this reference under **Existing Image** in Render. The image passed container smoke checks; a live Render deployment and physical-phone call still need verification.
 
 ## Docker Hub → Render (recommended for your test)
 

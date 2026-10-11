@@ -1,0 +1,41 @@
+/*
+ * Liquid Glass surfaces. Used for floating chrome only: navigation, toolbars, panels, menus and
+ * dialogs. Video and the whiteboard paper stay clear and opaque.
+ */
+.glass, .liquid-glass {
+  background-color: var(--glass-surface);
+  background-image: var(--glass-sheen);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), inset 0 1px 1px var(--glass-highlight), inset 0 -1px 0 var(--glass-edge);
+  border-radius: var(--radius-lg);
+}
+
+/* Denser glass where text sits on top of moving content (video, drawings). */
+.toolbar, .menu, .side-panel, .dialog, .board-toolbar, .toast {
+  background-color: var(--glass-surface-strong);
+}
+
+/* Without backdrop filtering, translucent panels lose legibility: use near-solid surfaces. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass, .liquid-glass, .toolbar, .menu, .side-panel, .dialog, .board-toolbar, .toast {
+    background-color: var(--glass-surface-solid);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .liquid-glass, .toolbar, .menu, .side-panel, .dialog, .board-toolbar, .toast {
+    background-color: var(--glass-surface-solid);
+    background-image: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .glass, .liquid-glass, .toolbar, .menu, .side-panel, .dialog, .board-toolbar, .toast {
+    background-color: var(--glass-surface-solid);
+    border-color: var(--line-strong);
+  }
+}

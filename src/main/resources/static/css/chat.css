@@ -1,0 +1,74 @@
+/* Live chat panel. */
+.chat { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.chat-scroll {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  padding: 8px 14px 6px; scrollbar-width: thin;
+}
+.chat-scroll:focus-visible { outline-offset: -3px; }
+.chat-empty {
+  display: grid; justify-items: center; gap: 6px; text-align: center;
+  margin: 18% auto 0; max-width: 240px; font-size: 14px; color: var(--text-secondary);
+}
+.chat-empty .icon { width: 30px; height: 30px; margin-bottom: 6px; color: var(--text-tertiary); stroke-width: 1.5; }
+.chat-empty-title { font-weight: 650; color: var(--text-primary); }
+.chat-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+
+.msg { display: flex; flex-direction: column; align-items: flex-start; max-width: 86%; animation: msg-in var(--transition-normal) var(--ease-out); }
+.msg.is-self { align-self: flex-end; align-items: flex-end; }
+.msg.starts-group { margin-top: 10px; }
+.msg-meta { display: flex; gap: 8px; align-items: baseline; padding: 0 6px 3px; font-size: 12px; color: var(--text-secondary); }
+.msg-meta strong { font-weight: 650; color: var(--text-primary); }
+.msg:not(.starts-group) .msg-meta { display: none; }
+.msg-bubble {
+  padding: 8px 13px; border-radius: 18px;
+  background: var(--bubble-other-bg); color: var(--bubble-other-fg);
+  border: 1px solid var(--glass-border);
+  font-size: 14.5px; line-height: 1.42;
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;
+}
+.msg:not(.is-self).starts-group .msg-bubble { border-top-left-radius: 6px; }
+.msg.is-self .msg-bubble { background: var(--bubble-self-bg); color: var(--bubble-self-fg); border-color: transparent; }
+.msg.is-self.starts-group .msg-bubble { border-top-right-radius: 6px; }
+.msg.is-pending .msg-bubble { opacity: 0.65; }
+.msg.is-failed .msg-bubble { background: var(--danger-soft); color: var(--text-primary); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
+.msg-fail { display: flex; gap: 8px; align-items: center; padding: 3px 6px 0; font-size: 12px; color: var(--danger); }
+[data-theme="dark"] .msg-fail { color: #FFB4AC; }
+.msg-fail button { border: 0; padding: 2px 4px; background: transparent; color: inherit; font-weight: 650; text-decoration: underline; text-underline-offset: 2px; }
+.msg-system {
+  align-self: center; margin: 10px 0 4px; padding: 3px 10px; border-radius: var(--radius-pill);
+  font-size: 12px; color: var(--text-secondary); background: var(--control-off-bg);
+}
+@keyframes msg-in { from { opacity: 0; transform: translateY(4px); } }
+
+.jump-latest {
+  position: absolute; left: 50%; bottom: 120px; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 34px; padding: 0 14px; border-radius: var(--radius-pill);
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+}
+.jump-latest .icon { width: 16px; height: 16px; }
+
+.typing { min-height: 22px; padding: 2px 18px; font-size: 12.5px; color: var(--text-secondary); font-style: italic; }
+.composer {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px;
+  margin: 0 12px 12px; padding: 6px 6px 6px 4px;
+  border-radius: 22px; background: var(--control-bg-hover); border: 1px solid var(--line);
+  transition: border-color var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+}
+.composer:focus-within { border-color: var(--focus-ring); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 20%, transparent); }
+.composer textarea {
+  min-height: 40px; max-height: 132px; padding: 9px 10px; resize: none;
+  border: 0; background: transparent; box-shadow: none; line-height: 1.45;
+}
+.composer textarea:focus-visible { box-shadow: none; background: transparent; }
+.send-btn {
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; border: 0;
+  background: var(--accent); color: var(--accent-fg);
+  transition: opacity var(--transition-fast) ease, transform var(--transition-fast) var(--ease-out);
+}
+.send-btn .icon { width: 18px; height: 18px; }
+.send-btn:disabled { opacity: 0.3; }
+.send-btn:active:not(:disabled) { transform: scale(0.92); }
+.chat-hint { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 8px; padding: 0 10px 2px; font-size: 11.5px; color: var(--text-secondary); }
+#chat-counter.is-over { color: var(--danger); font-weight: 650; }
+@media (pointer: coarse) { .chat-hint span:first-child { visibility: hidden; } }

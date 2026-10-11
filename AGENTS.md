@@ -2,11 +2,11 @@
 
 ## Project Structure & Module Organization
 
-This is a single-module Java 21 Spring Boot application built with Gradle. Web MVC and WebSocket dependencies are configured; it serves a group-call frontend, `/ws/rooms` signaling, `/api/call-config`, and the original `GET /greeting` endpoint.
+This is a single-module Java 21 Spring Boot application built with Gradle. Web MVC and WebSocket dependencies are configured; it serves the Together 2.0 frontend (calls, live chat, collaborative whiteboard), `/ws/rooms` realtime messaging, `/api/call-config`, and the original `GET /greeting` endpoint. See `docs/TOGETHER-2.0.md` for the protocol and design system.
 
-- `src/main/java/com/saldev/webrtc/`: application entry point and Java sources. Keep HTTP handlers in `controller`, business logic in `service`, and response objects in `model/response`.
-- `src/main/resources/application.properties`: application configuration. The plain HTML/CSS/JavaScript frontend lives in `src/main/resources/static/`; no frontend build step is required.
-- `src/test/java/com/saldev/webrtc/`: tests, mirroring the production package structure.
+- `src/main/java/com/saldev/webrtc/`: application entry point and Java sources. Keep HTTP handlers in `controller`, WebSocket transport and room state in `realtime`, business rules (chat, whiteboard validation) in `service`, and data objects in `model`.
+- `src/main/resources/application.properties`: application configuration. The plain HTML/CSS/ES-module frontend lives in `src/main/resources/static/` (`css/` tokens and per-screen styles, `js/core`, `js/components`, `js/whiteboard`); no frontend build step is required. Use design tokens from `css/tokens.css` instead of hard-coded colors, and render user text with `textContent` only.
+- `src/test/java/com/saldev/webrtc/`: tests, mirroring the production package structure. `src/test/js/` holds Node unit tests for DOM-free frontend modules (`node --test src/test/js/*.test.mjs`).
 - `build.gradle`, `settings.gradle`, and `gradle/wrapper/`: build configuration and pinned Gradle wrapper.
 - `build/`: generated classes, artifacts, and reports; do not edit or commit generated output.
 

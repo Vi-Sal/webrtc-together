@@ -1,6 +1,8 @@
+// The join message carries optional device hints without waiting for slow model lookups.
 import assert from 'node:assert/strict';
-const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true });
+import { launch, base, roomCode } from './lib.mjs';
+
+const browser = await launch([]);
 try {
     for (const mode of ['android', 'iphone', 'blocked']) {
         const page = await browser.newPage();
@@ -20,13 +22,12 @@ try {
             const message = JSON.parse(frame.payload);
             if (message.type === 'join') joins.push(message);
         }));
-        await page.goto(process.env.TEST_URL || 'http://localhost:8081');
-        await page.locator('#name').fill('Device check');
-        await page.locator('#room-input').fill(`device-${mode}-${Date.now()}`);
-        await page.locator('#start-mic').uncheck();
-        await page.locator('#start-camera').uncheck();
-        await page.locator('#join').click();
-        await page.locator('#call').waitFor({ state: 'visible', timeout: 5000 });
+        await page.goto(`${base}/?room=${roomCode(`device-${mode}`)}`);
+        await page.locator('#lobby-mic').click();
+        await page.locator('#lobby-camera').click();
+        await page.locator('#display-name').fill('Device check');
+        await page.locator('#join-button').click();
+        await page.locator('#meeting').waitFor({ state: 'visible', timeout: 5000 });
         assert.equal(joins.length, 1);
         assert.equal(joins[0].device.type, 'Phone');
         assert.equal(joins[0].device.os, mode === 'iphone' ? 'iOS' : 'Android');
@@ -36,5 +37,7 @@ try {
         assert.deepEqual(errors, []);
         await page.close();
     }
-    console.log('PASS: real join signaling includes optional device hints, including when model lookup never resolves.');
-} finally { await browser.close(); }
+    console.log('PASS: join signaling includes optional device hints, even when model lookup never resolves.');
+} finally {
+    await browser.close();
+}

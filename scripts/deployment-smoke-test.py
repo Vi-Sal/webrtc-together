@@ -10,7 +10,7 @@ base = f"http://127.0.0.1:{port}"
 with urllib.request.urlopen(base + "/healthz", timeout=10) as response:
     assert json.load(response) == {"status": "UP"}
 with urllib.request.urlopen(base + "/", timeout=10) as response:
-    assert b"/app.js" in response.read()
+    assert b"/js/app.js" in response.read()
 print("PASS: configured port serves health and the bundled frontend.")
 
 

@@ -1,92 +1,107 @@
-// Run with PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs node scripts/browser-test.mjs
+// Multi-participant call regression: media, mute/camera, screens, view switching, reconnect, cleanup.
 import assert from 'node:assert/strict';
-const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const base = process.env.TEST_URL || 'http://localhost:8081';
-const browser = await chromium.launch({
-    executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome',
-    headless: true,
-    args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream',
-        '--auto-select-desktop-capture-source=Entire screen', '--enable-usermedia-screen-capturing',
-        '--allow-http-screen-capture', '--autoplay-policy=no-user-gesture-required']
-});
+import { launch, instrument, join, waitForPeers, tileOf, roomCode } from './lib.mjs';
+
+const browser = await launch();
 const errors = [];
-const pages = [];
 try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-    await context.addInitScript(() => {
-        window.testConnections = [];
-        const Original = window.RTCPeerConnection;
-        window.RTCPeerConnection = class extends Original {
-            constructor(config) { super(config); window.testConnections.push(this); }
-        };
-        window.testStreams = [];
-        const original = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-        navigator.mediaDevices.getUserMedia = async options => {
-            const stream = await original(options); window.testStreams.push(stream); return stream;
-        };
-    });
-    const room = `test-${Date.now()}`;
-    for (const name of ['Alice', 'Bob', 'Charlie']) {
-        const page = await context.newPage(); pages.push(page);
-        page.on('pageerror', error => errors.push(error.message));
-        page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
-        await page.goto(`${base}/?room=${room}`);
-        if (name === 'Alice') await page.screenshot({ path: '/tmp/together-lobby.png', fullPage: true });
-        await page.locator('#name').fill(name);
-        await page.locator('#join').click();
-        await page.locator('#call').waitFor({ state: 'visible' });
-    }
+    await context.addInitScript(instrument);
+    const room = roomCode('call');
+    const pages = [];
+    for (const name of ['Alice', 'Bob', 'Charlie']) pages.push(await join(context, room, name, { errors }));
+    const [alice, bob, charlie] = pages;
     for (const page of pages) {
-        await page.waitForFunction(() => window.testConnections.length === 2 && window.testConnections.every(pc => pc.connectionState === 'connected'));
-        await page.waitForFunction(() => [...document.querySelectorAll('#videos video')].length === 3 && [...document.querySelectorAll('#videos video')].every(video => video.videoWidth > 0));
-        const receivedAudio = await page.evaluate(async () => {
-            const reports = await Promise.all(window.testConnections.map(pc => pc.getStats()));
+        await waitForPeers(page, 2);
+        const audio = await page.evaluate(async () => {
+            const reports = await Promise.all(window.testConnections.filter(pc => pc.connectionState === 'connected').map(pc => pc.getStats()));
             return reports.every(report => [...report.values()].some(stat => stat.type === 'inbound-rtp' && stat.kind === 'audio' && stat.bytesReceived > 0));
         });
-        assert.ok(receivedAudio, 'every peer receives remote audio');
+        assert.ok(audio, 'every peer receives remote audio');
     }
-    console.log('PASS: three participants exchange real WebRTC camera and audio tracks.');
-    await pages[0].locator('#mic').click();
-    await pages[1].waitForFunction(() => [...document.querySelectorAll('#videos .tile')].some(tile => tile.textContent.includes('Alice') && tile.textContent.includes('Muted')));
-    await pages[0].locator('#camera').click();
-    await pages[1].waitForFunction(() => [...document.querySelectorAll('#videos .tile')].some(tile => tile.textContent.includes('Alice') && tile.querySelector('video').style.opacity === '0'));
-    await pages[0].locator('#camera').click(); await pages[0].locator('#mic').click();
-    console.log('PASS: microphone and camera state propagate to peers.');
-    for (const page of pages.slice(0, 2)) {
+    assert.equal(await alice.locator('#participant-count span').textContent(), '3');
+    await alice.screenshot({ path: '/tmp/together-group-call.png' });
+    console.log('PASS: three participants exchange camera video and audio.');
+
+    await alice.locator('#mic').click();
+    await bob.waitForFunction(() => [...document.querySelectorAll('#people .tile')].some(t => t.textContent.includes('Alice') && t.classList.contains('mic-off')));
+    assert.equal(await alice.locator('#mic').getAttribute('aria-label'), 'Unmute microphone');
+    await alice.locator('#camera').click();
+    await bob.waitForFunction(() => [...document.querySelectorAll('#people .tile')].some(t => t.textContent.includes('Alice') && t.classList.contains('camera-off')));
+    assert.ok(await alice.evaluate(() => window.testStreams.some(s => s.getVideoTracks().some(t => t.readyState === 'ended'))), 'camera off releases the device');
+    await alice.locator('#camera').click();
+    await alice.locator('#mic').click();
+    await bob.waitForFunction(() => [...document.querySelectorAll('#people .tile')].some(t => t.textContent.includes('Alice') && !t.classList.contains('camera-off') && !t.classList.contains('mic-off') && t.querySelector('video').videoWidth > 0));
+    console.log('PASS: mute and camera state propagate; camera restarts.');
+
+    const before = await bob.evaluate(() => window.testConnections.filter(pc => pc.connectionState === 'connected'));
+    await bob.locator('#toggle-board').click();
+    await bob.locator('#board').waitFor();
+    await bob.locator('#toggle-chat').click();
+    await bob.evaluate(() => document.querySelector('[data-theme-toggle]').click());
+    await bob.locator('#toggle-board').click();
+    assert.ok(await bob.evaluate(() => {
+        const live = window.testConnections.filter(pc => pc.connectionState === 'connected');
+        return live.length === 2 && window.testConnections.length === 2;
+    }), 'switching views, panels and theme never recreates peer connections');
+    assert.ok(before);
+    await bob.locator('#panel-close').click();
+    console.log('PASS: view, panel and theme changes keep the same peer connections.');
+
+    for (const page of [alice, bob]) {
         await page.locator('#share').click();
-        await page.waitForFunction(() => document.querySelector('#share').textContent === 'Stop sharing');
+        await page.waitForFunction(() => document.querySelector('#share').getAttribute('aria-pressed') === 'true');
     }
-    await pages[2].waitForFunction(() => {
+    await charlie.waitForFunction(() => {
         const screens = [...document.querySelectorAll('#screens .tile:not([hidden]) video')];
-        return screens.length === 2 && screens.every(video => video.videoWidth > 0);
+        return screens.length === 2 && screens.every(video => video.videoWidth > 0) && document.querySelector('#stage').dataset.layout === 'presentation';
     });
-    await pages[2].screenshot({ path: '/tmp/together-group-call.png', fullPage: true });
-    console.log('PASS: two simultaneous screen shares received alongside three camera tiles.');
-    // A late arrival must receive already-running screen shares too.
-    await pages[2].reload(); await pages[2].locator('#name').fill('Charlie'); await pages[2].locator('#join').click();
-    await pages[2].waitForFunction(() => [...document.querySelectorAll('#screens .tile:not([hidden]) video')].filter(video => video.videoWidth > 0).length === 2);
-    await pages[0].locator('#share').click();
-    await pages[2].waitForFunction(() => document.querySelectorAll('#screens .tile:not([hidden])').length === 1);
-    console.log('PASS: late join and stop-sharing preserve other shares.');
-    await pages[0].locator('#share').click();
-    await pages[2].waitForFunction(() => [...document.querySelectorAll('#screens .tile:not([hidden]) video')].filter(video => video.videoWidth > 0).length === 2);
-    await pages[0].locator('#leave').click();
-    await pages[1].waitForFunction(() => document.querySelectorAll('#videos .tile').length === 2);
-    assert.ok(await pages[0].evaluate(() => window.testStreams.every(stream => stream.getTracks().every(track => track.readyState === 'ended'))));
-    console.log('PASS: restart sharing and leave cleanup.');
-    await pages[1].evaluate(() => socket.close());
-    await pages[1].locator('#lobby').waitFor({ state: 'visible' });
-    assert.ok(await pages[1].evaluate(() => window.testStreams.every(stream => stream.getTracks().every(track => track.readyState === 'ended'))));
-    console.log('PASS: signaling loss returns to lobby and releases devices.');
-    await pages[0].setViewportSize({ width: 390, height: 844 });
-    await pages[0].screenshot({ path: '/tmp/together-mobile.png', fullPage: true });
-    assert.ok(await pages[0].evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'mobile layout has no horizontal overflow');
+    await charlie.screenshot({ path: '/tmp/together-presentation.png' });
+    console.log('PASS: two simultaneous screen shares use the presentation layout.');
+
+    await charlie.reload();
+    await charlie.locator('#display-name').fill('Charlie');
+    await charlie.locator('#join-button').click();
+    await charlie.waitForFunction(() => [...document.querySelectorAll('#screens .tile:not([hidden]) video')].filter(v => v.videoWidth > 0).length === 2, null, { timeout: 20000 });
+    await alice.locator('#share').click();
+    await charlie.waitForFunction(() => document.querySelectorAll('#screens .tile:not([hidden])').length === 1);
+    console.log('PASS: late join receives running shares; stopping one keeps the other.');
+
+    // Signaling loss: the client reconnects with the same identity and media resumes.
+    const aliceId = await alice.evaluate(() => sessionStorage.getItem(Object.keys(sessionStorage).find(k => k.startsWith('together-resume'))));
+    assert.ok(aliceId, 'resume token stored per tab');
+    await bob.evaluate(() => window.testSockets.at(-1).close());
+    await bob.waitForFunction(() => document.querySelector('#connection').dataset.state === 'reconnecting' || document.querySelector('#connection').dataset.state === 'connected');
+    await bob.waitForFunction(() => document.querySelector('#connection').dataset.state === 'connected', null, { timeout: 20000 });
+    await bob.waitForFunction(() => window.testConnections.filter(pc => pc.connectionState === 'connected').length === 2, null, { timeout: 20000 });
+    await alice.waitForFunction(() => document.querySelectorAll('#people .tile').length === 3);
+    assert.ok(await bob.evaluate(() => window.testStreams.some(s => s.getTracks().some(t => t.readyState === 'live'))), 'local media kept across reconnect');
+    console.log('PASS: a dropped signaling connection reconnects automatically and restores media.');
+
+    await alice.locator('#leave').click();
+    await alice.locator('#lobby').waitFor();
+    await bob.waitForFunction(() => document.querySelectorAll('#people .tile').length === 2);
+    assert.ok(await alice.evaluate(() => window.testStreams.every(s => s.getTracks().every(t => t.readyState === 'ended'))));
+    console.log('PASS: leaving releases camera, microphone and screen capture.');
+
+    await charlie.setViewportSize({ width: 390, height: 844 });
+    await charlie.waitForTimeout(400);
+    await charlie.screenshot({ path: '/tmp/together-mobile.png' });
+    assert.ok(await charlie.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'mobile has no horizontal overflow');
+    assert.ok(await charlie.locator('#share').isHidden(), 'compact toolbar moves Share into More');
+    await charlie.locator('#more').click();
+    assert.ok(await charlie.locator('[data-menu="share"]').isVisible());
+    await charlie.keyboard.press('Escape');
+    assert.ok(await charlie.locator('#more-menu').isHidden());
+    await charlie.locator('#toggle-chat').click();
+    const sheet = await charlie.locator('#side-panel').boundingBox();
+    assert.ok(sheet.width >= 389 && sheet.y > 100, 'chat opens as a bottom sheet');
+    await charlie.screenshot({ path: '/tmp/together-mobile-chat.png' });
     assert.deepEqual(errors, [], 'browser errors');
-    console.log('PASS: mobile layout and no browser errors.');
+    console.log('PASS: mobile layout, compact toolbar, bottom-sheet chat and no browser errors.');
 } catch (error) {
-    for (let i = 0; i < pages.length; i++) {
-        console.error(`Page ${i}:`, await pages[i].locator('#status').textContent());
-        console.error(await pages[i].evaluate(() => window.testConnections?.map(pc => ({ connection: pc.connectionState, signaling: pc.signalingState, transceivers: pc.getTransceivers().map(t => ({ mid: t.mid, direction: t.direction, current: t.currentDirection, sender: t.sender.track?.kind, receiver: t.receiver.track.kind })) }))));
-    }
-    console.error(errors); throw error;
-} finally { await browser.close(); }
+    console.error(errors);
+    throw error;
+} finally {
+    await browser.close();
+}

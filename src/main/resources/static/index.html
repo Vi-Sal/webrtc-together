@@ -1,24 +1,360 @@
 <!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101817"><title>Together · Group calls</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css"><script src="/device.js" defer></script><script src="/app.js" defer></script></head>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#EDF3F7">
+<meta name="description" content="Together — one beautiful space to meet, talk, and create. Video calls, live chat and a shared whiteboard in your browser.">
+<title>Together · Meet. Talk. Create.</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script src="/js/theme-init.js"></script>
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/glass.css">
+<link rel="stylesheet" href="/css/landing.css">
+<link rel="stylesheet" href="/css/lobby.css">
+<link rel="stylesheet" href="/css/meeting.css">
+<link rel="stylesheet" href="/css/chat.css">
+<link rel="stylesheet" href="/css/whiteboard.css">
+<link rel="stylesheet" href="/css/responsive.css">
+<script src="/device.js" defer></script>
+<script type="module" src="/js/app.js"></script>
+</head>
 <body>
-<header><a class="brand" href="/">together<span>●</span></a><span class="pill">A little closer, wherever you are</span></header>
-<main>
-<section id="lobby" class="lobby">
- <div class="intro"><span class="eyebrow">YOUR SPACE TO CONNECT</span><h1>Good company.<br><em>One link away.</em></h1><p>Bring your people together. See every face, share your screens, and stay in the conversation.</p><div class="perks"><span>↗ Share an invite</span><span>◉ Up to 6 people</span><span>▣ Multiple screens</span></div></div>
- <form id="join-form" class="join-card"><span class="eyebrow">LET’S MEET</span><h2 id="join-title">Start a group call</h2><p>Choose how to join. You can enable devices during the call.</p><label for="name">Your name</label><input id="name" maxlength="40" autocomplete="given-name" placeholder="What should we call you?" required><label for="room-input">Room code or invitation link</label><input id="room-input" autocomplete="off" spellcheck="false" placeholder="DEFAULT_NAME (leave empty to join)" aria-describedby="room-help"><p id="room-help" class="hint">Leave empty to join DEFAULT_NAME with everyone on this server. Enter a different room code or paste an invite to join another room.</p><div class="device-options"><label><input id="start-mic" type="checkbox" checked> Start with microphone</label><label><input id="start-camera" type="checkbox" checked> Start with camera</label></div><button id="join" class="primary" type="submit">Join the room <span>→</span></button><p class="hint">No account needed. The default room is shared by everyone on this server.</p></form>
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></symbol>
+  <symbol id="i-mic-off" viewBox="0 0 24 24"><path d="M15 9.5V6a3 3 0 0 0-5.7-1.3M9 9v2a3 3 0 0 0 4.9 2.3M18.5 11a6.5 6.5 0 0 1-1.2 3.8M5.5 11a6.5 6.5 0 0 0 10.4 5.2M12 17.5V21M8.5 21h7M3.5 3.5l17 17"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="3"/><path d="M15.5 10.5l5-3v9l-5-3z"/></symbol>
+  <symbol id="i-camera-off" viewBox="0 0 24 24"><path d="M10 6h2.5a3 3 0 0 1 3 3v1.5l5-3v9l-3.2-1.9M15.5 15.5a3 3 0 0 1-3 2.5h-7a3 3 0 0 1-3-3V9a3 3 0 0 1 2.4-2.9M3.5 3.5l17 17"/></symbol>
+  <symbol id="i-screen" viewBox="0 0 24 24"><rect x="2.5" y="4" width="19" height="13" rx="2.5"/><path d="M8 21h8M12 17v4M12 13.5V8M9.5 10.5L12 8l2.5 2.5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 0 1-12.2 7.6L3.5 20.5l1.1-4.4A8.5 8.5 0 1 1 20.5 12z"/></symbol>
+  <symbol id="i-board" viewBox="0 0 24 24"><rect x="3" y="3.5" width="18" height="13.5" rx="2.5"/><path d="M7 13c1.6-3 3-4 4.5-1.6s3 1.6 5.5-2.9M8.5 21l1.5-4M15.5 21L14 17"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2a6.5 6.5 0 0 1 3.5 5.8"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M5.5 12h.01M12 12h.01M18.5 12h.01" stroke-width="3.2"/></symbol>
+  <symbol id="i-leave" viewBox="0 0 24 24"><path d="M2.8 14.2c5-4.8 13.4-4.8 18.4 0l-2.3 2.7-3.7-1.6v-2.8a10.4 10.4 0 0 0-6.4 0v2.8l-3.7 1.6z"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3A4.5 4.5 0 0 0 13 4.6l-1 1M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M15.5 8.5V6A2.5 2.5 0 0 0 13 3.5H6A2.5 2.5 0 0 0 3.5 6v7A2.5 2.5 0 0 0 6 15.5h2.5"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6L6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M20.5 3.5L10 14M20.5 3.5l-6.5 17-4-6.5-6.5-4z"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5zM13.5 7l3 3"/></symbol>
+  <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M9 20h11M4.6 15.4l9.8-9.8a2 2 0 0 1 2.8 0l2.2 2.2a2 2 0 0 1 0 2.8L11 19H8.2zM9 11l5 5"/></symbol>
+  <symbol id="i-line" viewBox="0 0 24 24"><path d="M5 19L19 5"/></symbol>
+  <symbol id="i-rect" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/></symbol>
+  <symbol id="i-ellipse" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="8.5" ry="6.5"/></symbol>
+  <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 7V5h14v2M12 5v14M9 19h6"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5.5 7l1 12a2 2 0 0 0 2 1.8h7a2 2 0 0 0 2-1.8l1-12M9 7V4.5h6V7"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M4.5 19.5h15"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4zM16 9a4.5 4.5 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 32 32"><circle cx="12" cy="16" r="8.5"/><circle cx="20" cy="16" r="8.5"/></symbol>
+</svg>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<!-- Landing -->
+<section id="landing" class="screen landing" aria-labelledby="landing-title">
+  <header class="topbar">
+    <nav class="nav glass" aria-label="Primary">
+      <a class="brand" href="/" aria-label="Together home">
+        <svg class="brand-mark" aria-hidden="true"><use href="#i-logo"/></svg><span>Together</span>
+      </a>
+      <div class="nav-actions">
+        <button class="btn btn-ghost btn-sm" type="button" data-action="show-join">Join</button>
+        <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch to Midnight Glass theme"><svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg><svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg></button>
+      </div>
+    </nav>
+  </header>
+  <main class="hero" id="main-content">
+    <div class="hero-copy">
+      <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Together 2.0</p>
+      <h1 id="landing-title" class="display">Good things happen <span class="display-soft">together.</span></h1>
+      <p class="lede">One beautiful space to meet, talk, and create — wherever you are.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary btn-lg" type="button" id="start-meeting">
+          <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Start a meeting
+        </button>
+        <button class="btn btn-glass btn-lg" type="button" data-action="show-join" aria-expanded="false" aria-controls="join-form">Join a meeting</button>
+      </div>
+      <form id="join-form" class="join-inline glass" novalidate hidden>
+        <label for="join-code" class="sr-only">Meeting code or invitation link</label>
+        <input id="join-code" name="code" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Enter a code or paste an invite link" aria-describedby="landing-error">
+        <button class="btn btn-primary" type="submit">Join<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+      </form>
+      <p id="landing-error" class="form-error" role="alert"></p>
+      <ul class="hero-points" aria-label="What you can do">
+        <li><svg class="icon" aria-hidden="true"><use href="#i-camera"/></svg>Video &amp; screens</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>Live chat</li>
+        <li><svg class="icon" aria-hidden="true"><use href="#i-board"/></svg>Shared whiteboard</li>
+      </ul>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <div class="mock-window glass">
+        <div class="mock-bar"><span></span><span></span><span></span><em>Design review · 12:48</em></div>
+        <div class="mock-grid">
+          <div class="mock-tile t1"><b>M</b><i>Maya</i></div>
+          <div class="mock-tile t2"><b>S</b><i>Sam</i></div>
+          <div class="mock-tile t3 mock-board"><svg viewBox="0 0 160 90"><path d="M18 62c18-30 34-38 50-16s30 18 52-20" /><rect x="96" y="54" width="44" height="22" rx="3"/><circle cx="36" cy="28" r="10"/></svg></div>
+          <div class="mock-tile t4"><b>A</b><i>Alex</i></div>
+        </div>
+        <div class="mock-toolbar glass"><span></span><span></span><span></span><span class="end"></span></div>
+      </div>
+      <div class="mock-bubble glass"><b>Sam</b>Love this direction ✨</div>
+    </div>
+  </main>
+  <footer class="landing-foot">
+    <span>Up to 6 people</span><span aria-hidden="true">·</span><span>No account needed</span><span aria-hidden="true">·</span><span>Peer-to-peer media</span>
+  </footer>
 </section>
-<section id="call" hidden>
- <div class="room-heading"><div><span class="eyebrow">YOUR GROUP CALL</span><h1>Room to be together<span class="live-dot"></span></h1><p id="participant-count">1 person · You’re the first here</p></div><button id="invite" class="secondary">Copy invite link ↗</button></div>
- <div class="room-identity"><span>Room <code id="room-code"></code></span><span>Server <code id="room-server"></code></span><p>Everyone must use this room code on the same server. Send the full invite link to your friend.</p></div>
- <div id="invite-fallback" hidden><label for="invite-url">Copy this invitation</label><input id="invite-url" readonly></div>
- <p id="media-status" class="media-notice" role="status" hidden></p>
- <div id="screen-notice" class="media-notice" hidden><p id="screen-message" role="status"></p><details><summary>Details for troubleshooting</summary><pre id="screen-details"></pre></details></div>
- <div id="screens" class="screens" aria-label="Shared screens"></div>
- <div id="videos" class="videos" aria-label="Participants"></div>
- <div id="waiting" class="waiting"><span>✦</span><div><strong>It’s better with company.</strong><p>Use Copy invite link and open that exact link in the other browser. Leaving the room field empty joins DEFAULT_NAME.</p></div></div>
- <div class="controls" aria-label="Call controls"><button id="mic" aria-pressed="false">Mute mic</button><button id="camera" aria-pressed="false">Camera off</button><button id="share" aria-pressed="false">Share screen</button><button id="audio" hidden>Enable sound</button><button id="leave" class="danger">Leave call</button></div>
+
+<!-- Pre-join lobby -->
+<section id="lobby" class="screen lobby" aria-labelledby="lobby-title" hidden>
+  <header class="topbar">
+    <nav class="nav glass" aria-label="Lobby">
+      <button class="btn btn-ghost btn-sm" type="button" id="lobby-back"><svg class="icon" aria-hidden="true"><use href="#i-back"/></svg>Back</button>
+      <a class="brand" href="/" aria-label="Together home"><svg class="brand-mark" aria-hidden="true"><use href="#i-logo"/></svg><span>Together</span></a>
+      <button class="icon-btn theme-toggle" type="button" data-theme-toggle aria-label="Switch to Midnight Glass theme"><svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg><svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg></button>
+    </nav>
+  </header>
+  <main class="lobby-body">
+    <div class="preview-column">
+      <div class="preview" id="preview">
+        <video id="preview-video" autoplay playsinline muted></video>
+        <div class="preview-placeholder" id="preview-placeholder">
+          <div class="avatar avatar-xl" id="preview-avatar" aria-hidden="true">?</div>
+          <p id="preview-message">Your camera is off</p>
+          <button class="btn btn-glass btn-sm" type="button" id="preview-allow" hidden>Check camera &amp; mic</button>
+        </div>
+        <div class="preview-loading" id="preview-loading" hidden><span class="spinner" aria-hidden="true"></span><span>Starting your devices…</span></div>
+        <div class="preview-controls glass">
+          <button class="round-btn" type="button" id="lobby-mic" aria-pressed="true" aria-label="Microphone on" data-tooltip="Turn off microphone">
+            <svg class="icon icon-on" aria-hidden="true"><use href="#i-mic"/></svg><svg class="icon icon-off" aria-hidden="true"><use href="#i-mic-off"/></svg>
+          </button>
+          <button class="round-btn" type="button" id="lobby-camera" aria-pressed="true" aria-label="Camera on" data-tooltip="Turn off camera">
+            <svg class="icon icon-on" aria-hidden="true"><use href="#i-camera"/></svg><svg class="icon icon-off" aria-hidden="true"><use href="#i-camera-off"/></svg>
+          </button>
+        </div>
+        <div class="level-meter" id="preview-meter" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <p class="notice" id="lobby-media-notice" role="status" hidden></p>
+    </div>
+    <form class="lobby-panel glass" id="lobby-form" novalidate>
+      <p class="eyebrow">Ready to join?</p>
+      <h1 id="lobby-title" class="lobby-title">Your meeting room</h1>
+      <div class="meeting-code">
+        <div><span class="meta-label">Meeting code</span><code id="lobby-room"></code></div>
+        <button class="icon-btn" type="button" id="lobby-copy" aria-label="Copy invite link" data-tooltip="Copy invite link"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg></button>
+      </div>
+      <div class="field">
+        <label for="display-name">Your name</label>
+        <input id="display-name" name="name" maxlength="40" autocomplete="nickname" placeholder="How should others see you?" required>
+      </div>
+      <div class="device-fields" id="device-fields" hidden>
+        <div class="field">
+          <label for="mic-select">Microphone</label>
+          <div class="select-wrap"><select id="mic-select" data-kind="audio"></select><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg></div>
+        </div>
+        <div class="field">
+          <label for="camera-select">Camera</label>
+          <div class="select-wrap"><select id="camera-select" data-kind="video"></select><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg></div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg btn-block" type="submit" id="join-button">Join now</button>
+      <p class="form-status" id="lobby-status" role="status" aria-live="polite"></p>
+      <p class="fine-print">Media travels directly between participants. Chat and the whiteboard are kept in memory only while the room is active.</p>
+    </form>
+  </main>
 </section>
-<p id="status" role="status" aria-live="polite"></p>
-</main><footer><span>Together / simple group calls</span><span>Camera + screen, at the same time.</span></footer>
-</body></html>
+
+<!-- Meeting -->
+<section id="meeting" class="screen meeting" data-view="video" aria-label="Meeting" hidden>
+  <header class="meeting-header">
+    <div class="header-group glass">
+      <svg class="brand-mark" aria-hidden="true"><use href="#i-logo"/></svg>
+      <button class="room-chip" type="button" id="room-chip" aria-label="Copy invite link" data-tooltip="Copy invite link"><span class="sr-only">Meeting code </span><code id="room-code"></code></button>
+      <span class="divider" aria-hidden="true"></span>
+      <time id="meeting-timer" class="timer" aria-label="Meeting duration">00:00</time>
+    </div>
+    <div class="header-group glass header-status">
+      <span class="connection" id="connection" data-state="connecting"><span class="dot" aria-hidden="true"></span><span id="connection-label">Connecting…</span></span>
+      <span class="divider" aria-hidden="true"></span>
+      <span class="count" id="participant-count" aria-label="1 of 6 participants"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg><span>1</span></span>
+      <button class="btn btn-ink btn-sm" type="button" id="invite"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg><span>Invite</span></button>
+    </div>
+  </header>
+  <p class="sr-only" id="connection-announcer" role="status" aria-live="polite"></p>
+
+  <div class="meeting-main">
+    <div class="stage-column">
+      <div class="notices" id="notices">
+        <div class="notice notice-warn" id="media-status" role="status" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg><p id="media-status-text"></p>
+        </div>
+        <div class="notice notice-warn" id="screen-notice" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+          <div><p id="screen-message" role="status"></p><details><summary>Details for troubleshooting</summary><pre id="screen-details"></pre></details></div>
+          <button class="icon-btn icon-btn-sm" type="button" data-dismiss="screen-notice" aria-label="Dismiss"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+        </div>
+        <div class="notice" id="sound-notice" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-volume"/></svg><p>Your browser paused incoming audio.</p>
+          <button class="btn btn-ink btn-sm" type="button" id="enable-sound">Enable sound</button>
+        </div>
+      </div>
+      <div class="stage" id="stage" data-layout="grid">
+        <div class="board" id="board" hidden>
+          <div class="board-toolbar glass" role="toolbar" aria-label="Whiteboard tools" id="board-toolbar">
+            <div class="tool-group" role="group" aria-label="Drawing tool">
+              <button class="tool-btn" type="button" data-tool="pen" aria-pressed="true" aria-label="Pen (P)" data-tooltip="Pen · P"><svg class="icon" aria-hidden="true"><use href="#i-pen"/></svg></button>
+              <button class="tool-btn" type="button" data-tool="eraser" aria-pressed="false" aria-label="Eraser (E)" data-tooltip="Eraser · E"><svg class="icon" aria-hidden="true"><use href="#i-eraser"/></svg></button>
+              <button class="tool-btn" type="button" data-tool="line" aria-pressed="false" aria-label="Line (L)" data-tooltip="Line · L"><svg class="icon" aria-hidden="true"><use href="#i-line"/></svg></button>
+              <button class="tool-btn" type="button" data-tool="rect" aria-pressed="false" aria-label="Rectangle (R)" data-tooltip="Rectangle · R"><svg class="icon" aria-hidden="true"><use href="#i-rect"/></svg></button>
+              <button class="tool-btn" type="button" data-tool="ellipse" aria-pressed="false" aria-label="Circle (O)" data-tooltip="Circle · O"><svg class="icon" aria-hidden="true"><use href="#i-ellipse"/></svg></button>
+              <button class="tool-btn" type="button" data-tool="text" aria-pressed="false" aria-label="Text (T)" data-tooltip="Text · T"><svg class="icon" aria-hidden="true"><use href="#i-text"/></svg></button>
+            </div>
+            <span class="tool-divider" aria-hidden="true"></span>
+            <div class="tool-group swatches" role="group" aria-label="Color" id="board-swatches"></div>
+            <label class="color-custom" data-tooltip="Custom color"><span class="sr-only">Custom color</span><input type="color" id="board-color" value="#243341"></label>
+            <span class="tool-divider" aria-hidden="true"></span>
+            <label class="size-control" data-tooltip="Brush size"><span class="sr-only">Brush size</span><span class="size-dot" id="board-size-dot" aria-hidden="true"></span><input type="range" id="board-size" min="1" max="40" step="1" value="4"></label>
+            <span class="tool-divider" aria-hidden="true"></span>
+            <div class="tool-group" role="group" aria-label="History">
+              <button class="tool-btn" type="button" id="board-undo" aria-label="Undo your last change" data-tooltip="Undo · Ctrl Z" disabled><svg class="icon" aria-hidden="true"><use href="#i-undo"/></svg></button>
+              <button class="tool-btn" type="button" id="board-redo" aria-label="Redo" data-tooltip="Redo · Ctrl Shift Z" disabled><svg class="icon" aria-hidden="true"><use href="#i-redo"/></svg></button>
+            </div>
+            <div class="tool-group" role="group" aria-label="Board">
+              <button class="tool-btn" type="button" id="board-export" aria-label="Export as PNG" data-tooltip="Export PNG"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg></button>
+              <button class="tool-btn tool-danger" type="button" id="board-clear" aria-label="Clear board for everyone" data-tooltip="Clear board"><svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg></button>
+            </div>
+          </div>
+          <div class="board-area" id="board-area">
+            <div class="board-surface" id="board-surface">
+              <canvas id="board-canvas" aria-label="Shared whiteboard. Draw with a mouse, finger or stylus." role="img"></canvas>
+              <div class="board-cursors" id="board-cursors" aria-hidden="true"></div>
+              <p class="board-empty" id="board-empty">Draw, sketch or write — everyone here sees it live.</p>
+            </div>
+          </div>
+        </div>
+        <div class="screens" id="screens" aria-label="Shared screens"></div>
+        <div class="people" id="people" aria-label="Participants" data-count="1"></div>
+        <div class="waiting glass" id="waiting">
+          <p class="waiting-title">It’s quiet in here.</p>
+          <p>Share the invite link and people can join from any browser.</p>
+          <button class="btn btn-ink btn-sm" type="button" data-action="invite"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg>Copy invite link</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side-panel glass" id="side-panel" aria-label="Meeting panel" hidden>
+      <div class="panel-head">
+        <div class="segmented" role="tablist" aria-label="Panel">
+          <button type="button" role="tab" id="tab-chat" aria-controls="chat-panel" aria-selected="true">Chat</button>
+          <button type="button" role="tab" id="tab-people" aria-controls="people-panel" aria-selected="false">People <span id="people-tab-count">1</span></button>
+        </div>
+        <button class="icon-btn icon-btn-sm" type="button" id="panel-close" aria-label="Close panel"><svg class="icon" aria-hidden="true"><use href="#i-close"/></svg></button>
+      </div>
+      <section class="chat" id="chat-panel" role="tabpanel" aria-labelledby="tab-chat">
+        <div class="chat-scroll" id="chat-scroll" tabindex="0" aria-label="Chat messages">
+          <div class="chat-empty" id="chat-empty">
+            <svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg>
+            <p class="chat-empty-title">No messages yet</p>
+            <p>Say hello. Messages are visible to everyone in this meeting.</p>
+          </div>
+          <ol class="chat-list" id="chat-list" aria-live="polite" aria-relevant="additions"></ol>
+        </div>
+        <button class="jump-latest glass" type="button" id="chat-jump" hidden>New messages<svg class="icon" aria-hidden="true"><use href="#i-down"/></svg></button>
+        <p class="typing" id="chat-typing" aria-live="polite"></p>
+        <form class="composer" id="chat-form" novalidate>
+          <label for="chat-input" class="sr-only">Message</label>
+          <textarea id="chat-input" rows="1" maxlength="1000" placeholder="Message everyone" enterkeyhint="send" aria-describedby="chat-hint"></textarea>
+          <button class="send-btn" type="submit" id="chat-send" aria-label="Send message" disabled><svg class="icon" aria-hidden="true"><use href="#i-send"/></svg></button>
+          <p class="chat-hint" id="chat-hint"><span>Enter to send · Shift + Enter for a new line</span><span id="chat-counter"></span></p>
+        </form>
+      </section>
+      <section class="people-panel" id="people-panel" role="tabpanel" aria-labelledby="tab-people" hidden>
+        <ul class="people-list" id="people-list"></ul>
+        <button class="btn btn-glass btn-block" type="button" data-action="invite"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg>Copy invite link</button>
+      </section>
+    </aside>
+  </div>
+
+  <nav class="toolbar glass" aria-label="Meeting controls">
+    <div class="toolbar-group">
+      <button class="ctl" type="button" id="mic" aria-pressed="false" aria-label="Mute microphone" data-tooltip="Mute">
+        <svg class="icon icon-on" aria-hidden="true"><use href="#i-mic"/></svg><svg class="icon icon-off" aria-hidden="true"><use href="#i-mic-off"/></svg>
+      </button>
+      <button class="ctl" type="button" id="camera" aria-pressed="false" aria-label="Turn off camera" data-tooltip="Stop video">
+        <svg class="icon icon-on" aria-hidden="true"><use href="#i-camera"/></svg><svg class="icon icon-off" aria-hidden="true"><use href="#i-camera-off"/></svg>
+      </button>
+      <button class="ctl hide-compact" type="button" id="share" aria-pressed="false" aria-label="Share screen" data-tooltip="Share screen">
+        <svg class="icon" aria-hidden="true"><use href="#i-screen"/></svg>
+      </button>
+    </div>
+    <span class="toolbar-divider" aria-hidden="true"></span>
+    <div class="toolbar-group">
+      <button class="ctl" type="button" id="toggle-chat" aria-pressed="false" aria-label="Open chat" data-tooltip="Chat">
+        <svg class="icon" aria-hidden="true"><use href="#i-chat"/></svg><span class="badge" id="chat-badge" hidden></span>
+      </button>
+      <button class="ctl" type="button" id="toggle-board" aria-pressed="false" aria-label="Open whiteboard" data-tooltip="Whiteboard">
+        <svg class="icon" aria-hidden="true"><use href="#i-board"/></svg><span class="badge badge-dot" id="board-badge" hidden></span>
+      </button>
+      <button class="ctl hide-compact" type="button" id="toggle-people" aria-pressed="false" aria-label="Show participants" data-tooltip="Participants">
+        <svg class="icon" aria-hidden="true"><use href="#i-people"/></svg>
+      </button>
+      <div class="menu-anchor">
+        <button class="ctl" type="button" id="more" aria-haspopup="true" aria-expanded="false" aria-controls="more-menu" aria-label="More options" data-tooltip="More">
+          <svg class="icon" aria-hidden="true"><use href="#i-more"/></svg>
+        </button>
+        <div class="menu glass" id="more-menu" role="menu" aria-label="More options" hidden>
+          <button class="menu-item show-compact" type="button" role="menuitem" data-menu="share"><svg class="icon" aria-hidden="true"><use href="#i-screen"/></svg><span id="menu-share-label">Share screen</span></button>
+          <button class="menu-item show-compact" type="button" role="menuitem" data-menu="people"><svg class="icon" aria-hidden="true"><use href="#i-people"/></svg><span>Participants</span></button>
+          <button class="menu-item" type="button" role="menuitem" data-menu="invite"><svg class="icon" aria-hidden="true"><use href="#i-link"/></svg><span>Copy invite link</span></button>
+          <button class="menu-item" type="button" role="menuitem" data-menu="theme"><svg class="icon icon-moon" aria-hidden="true"><use href="#i-moon"/></svg><svg class="icon icon-sun" aria-hidden="true"><use href="#i-sun"/></svg><span data-theme-label>Midnight Glass</span></button>
+          <div class="menu-section" role="none">
+            <label for="meeting-mic-select">Microphone</label>
+            <div class="select-wrap"><select id="meeting-mic-select" data-kind="audio"></select><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg></div>
+            <label for="meeting-camera-select">Camera</label>
+            <div class="select-wrap"><select id="meeting-camera-select" data-kind="video"></select><svg class="icon" aria-hidden="true"><use href="#i-down"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <span class="toolbar-divider" aria-hidden="true"></span>
+    <button class="ctl ctl-leave" type="button" id="leave" aria-label="Leave meeting" data-tooltip="Leave">
+      <svg class="icon" aria-hidden="true"><use href="#i-leave"/></svg><span class="ctl-text">Leave</span>
+    </button>
+  </nav>
+</section>
+
+<div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+<dialog class="dialog glass" id="confirm-dialog" aria-labelledby="confirm-title" aria-describedby="confirm-body">
+  <form method="dialog">
+    <h2 id="confirm-title">Are you sure?</h2>
+    <p id="confirm-body"></p>
+    <div class="dialog-actions">
+      <button class="btn btn-glass" value="cancel" type="submit">Cancel</button>
+      <button class="btn btn-danger" value="confirm" type="submit" id="confirm-ok">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="dialog glass" id="invite-dialog" aria-labelledby="invite-title">
+  <form method="dialog">
+    <h2 id="invite-title">Invite people</h2>
+    <p>Copy this link and send it to the people you want to meet.</p>
+    <label for="invite-url" class="sr-only">Invitation link</label>
+    <input id="invite-url" readonly>
+    <div class="dialog-actions"><button class="btn btn-primary" value="close" type="submit">Done</button></div>
+  </form>
+</dialog>
+</body>
+</html>
