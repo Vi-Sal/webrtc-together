@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#101817"><title>Together · Group calls</title><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css"><script src="/device.js" defer></script><script src="/app.js" defer></script></head>
+<body>
+<header><a class="brand" href="/">together<span>●</span></a><span class="pill">A little closer, wherever you are</span></header>
+<main>
+<section id="lobby" class="lobby">
+ <div class="intro"><span class="eyebrow">YOUR SPACE TO CONNECT</span><h1>Good company.<br><em>One link away.</em></h1><p>Bring your people together. See every face, share your screens, and stay in the conversation.</p><div class="perks"><span>↗ Share an invite</span><span>◉ Up to 6 people</span><span>▣ Multiple screens</span></div></div>
+ <form id="join-form" class="join-card"><span class="eyebrow">LET’S MEET</span><h2 id="join-title">Start a group call</h2><p>Choose how to join. You can enable devices during the call.</p><label for="name">Your name</label><input id="name" maxlength="40" autocomplete="given-name" placeholder="What should we call you?" required><label for="room-input">Room code or invitation link</label><input id="room-input" autocomplete="off" spellcheck="false" placeholder="DEFAULT_NAME (leave empty to join)" aria-describedby="room-help"><p id="room-help" class="hint">Leave empty to join DEFAULT_NAME with everyone on this server. Enter a different room code or paste an invite to join another room.</p><div class="device-options"><label><input id="start-mic" type="checkbox" checked> Start with microphone</label><label><input id="start-camera" type="checkbox" checked> Start with camera</label></div><button id="join" class="primary" type="submit">Join the room <span>→</span></button><p class="hint">No account needed. The default room is shared by everyone on this server.</p></form>
+</section>
+<section id="call" hidden>
+ <div class="room-heading"><div><span class="eyebrow">YOUR GROUP CALL</span><h1>Room to be together<span class="live-dot"></span></h1><p id="participant-count">1 person · You’re the first here</p></div><button id="invite" class="secondary">Copy invite link ↗</button></div>
+ <div class="room-identity"><span>Room <code id="room-code"></code></span><span>Server <code id="room-server"></code></span><p>Everyone must use this room code on the same server. Send the full invite link to your friend.</p></div>
+ <div id="invite-fallback" hidden><label for="invite-url">Copy this invitation</label><input id="invite-url" readonly></div>
+ <p id="media-status" class="media-notice" role="status" hidden></p>
+ <div id="screen-notice" class="media-notice" hidden><p id="screen-message" role="status"></p><details><summary>Details for troubleshooting</summary><pre id="screen-details"></pre></details></div>
+ <div id="screens" class="screens" aria-label="Shared screens"></div>
+ <div id="videos" class="videos" aria-label="Participants"></div>
+ <div id="waiting" class="waiting"><span>✦</span><div><strong>It’s better with company.</strong><p>Use Copy invite link and open that exact link in the other browser. Leaving the room field empty joins DEFAULT_NAME.</p></div></div>
+ <div class="controls" aria-label="Call controls"><button id="mic" aria-pressed="false">Mute mic</button><button id="camera" aria-pressed="false">Camera off</button><button id="share" aria-pressed="false">Share screen</button><button id="audio" hidden>Enable sound</button><button id="leave" class="danger">Leave call</button></div>
+</section>
+<p id="status" role="status" aria-live="polite"></p>
+</main><footer><span>Together / simple group calls</span><span>Camera + screen, at the same time.</span></footer>
+</body></html>

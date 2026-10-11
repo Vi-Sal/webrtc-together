@@ -1,0 +1,15 @@
+.git
+.gradle
+.idea
+.vscode
+.codex
+.agents
+build
+node_modules
+**/node_modules
+.env
+.env.*
+*.log
+scripts
+docs
+webrtc-guide.html

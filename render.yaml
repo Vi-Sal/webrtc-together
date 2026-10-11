@@ -1,0 +1,18 @@
+# Optional Blueprint. To use the user's existing project, select it during
+# creation or move the service to its environment in the Render dashboard.
+services:
+  - type: web
+    name: together-webrtc
+    runtime: docker
+    plan: free
+    region: singapore
+    numInstances: 1
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeployTrigger: off
+    envVars:
+      - key: PORT
+        value: "10000"
+      # Add CALL_STUN_URL and provider-issued CALL_TURN_* values in Render.
+      # No relay credentials are committed to this file.
